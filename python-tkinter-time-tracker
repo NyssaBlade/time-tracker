@@ -1,0 +1,90 @@
+import time
+import tkinter as tk
+from tkinter import messagebox
+
+class SimpleTimeTracker:
+    def __init__(self, root):
+        self.start_time = None
+        self.paused_time = 0
+        self.running = False
+        self.paused = False
+        self.update_interval = 1000  # Update every 1000 ms (1 second)
+        self.root = root
+
+        # Create GUI components
+        self.root.title("Simple Time Tracker")
+
+        self.start_button = tk.Button(self.root, text="Start", command=self.start)
+        self.start_button.pack(pady=10)
+
+        self.pause_button = tk.Button(self.root, text="Pause", command=self.pause)
+        self.pause_button.pack(pady=10)
+
+        self.stop_button = tk.Button(self.root, text="Stop", command=self.stop)
+        self.stop_button.pack(pady=10)
+
+        self.time_label = tk.Label(self.root, text="Elapsed Time: 0.00 seconds")
+        self.time_label.pack(pady=10)
+
+        self.timeline_label = tk.Label(self.root, text="Tracked Times:")
+        self.timeline_label.pack(pady=10)
+
+        self.timeline_listbox = tk.Listbox(self.root)
+        self.timeline_listbox.pack(pady=10, fill=tk.BOTH, expand=True)
+
+    def start(self):
+        if not self.running:
+            self.start_time = time.time() - self.paused_time
+            self.running = True
+            self.paused = False
+            self.update_timer()
+            self.time_label.config(text="Elapsed Time: 0.00 seconds")
+
+    def pause(self):
+        if not self.running:
+            return
+
+        if self.paused:
+            self.start_time = time.time() - self.paused_time
+            self.paused = False
+            self.update_timer()
+        else:
+            self.paused_time = time.time() - self.start_time
+            self.paused = True
+
+    def stop(self):
+        if not self.running:
+            messagebox.showerror("Error", "Time tracking has not been started.")
+            return
+
+        if self.paused:
+            elapsed_time = self.paused_time
+        else:
+            self.end_time = time.time()
+            elapsed_time = self.end_time - self.start_time
+
+        formatted_time = f"Start: {time.ctime(self.start_time)}, End: {time.ctime(time.time())}, Elapsed: {elapsed_time:.2f} seconds"
+        self.timeline_listbox.insert(tk.END, formatted_time)
+
+        self.running = False
+        self.paused = False
+
+        self.time_label.config(text=f"Elapsed Time: {elapsed_time:.2f} seconds")
+        self.paused_time = 0
+        self.reset()
+
+    def update_timer(self):
+        if self.running and not self.paused:
+            elapsed_time = time.time() - self.start_time
+            self.time_label.config(text=f"Elapsed Time: {elapsed_time:.2f} seconds")
+            self.root.after(self.update_interval, self.update_timer)
+
+    def reset(self):
+        self.start_time = None
+        self.paused_time = 0
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.geometry("400x400")
+    tracker = SimpleTimeTracker(root)
+    root.mainloop()
